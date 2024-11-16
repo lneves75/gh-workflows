@@ -12,9 +12,6 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: write
 
     steps:
       - name: Get image tag
