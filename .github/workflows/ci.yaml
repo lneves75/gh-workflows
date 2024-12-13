@@ -31,11 +31,18 @@ jobs:
       - name: Docker login
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
+      - name: Get args
+        run: |
+          echo "${{ inputs.build-args }}"
+          echo "${{ fromJSON(inputs.build-args) }}"
+          echo "${{ fromJSON(inputs.build-args).args }}"
+          echo "${{ fromJSON(inputs.build-args) }}" | jq .
+
       - name: Build image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          build-args: ${{ fromJSON(inputs.build.args) }}
+          build-args: ${{ fromJSON(inputs.build.args).args }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.name }}:${{ steps.checkout.outputs.commit }}
