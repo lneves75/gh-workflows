@@ -31,6 +31,11 @@ jobs:
       - name: Docker login
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
+      - name: Output build args
+        run: |
+          echo ${{ inputs.build-args }}
+          echo ${{ toJSON(inputs.build-args) }}
+
       - name: Build image
         uses: docker/build-push-action@v6
         with:
