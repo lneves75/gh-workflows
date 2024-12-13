@@ -9,6 +9,10 @@ on:
       ref:
         required: false
         type: string
+      build-args:
+        required: false
+        type: string
+        default: 'COMMIT_HASH=abc,VERSION=1.27.0'
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -25,13 +29,20 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Docker login
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      # - name: Docker login
+      #   run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: toJSON
+        id: tojson
+        run: |
+          echo "out=${{ toJSON(inputs.build-args) }}" >> $GITHUB_OUTPUT
+          echo "${{ toJSON(inputs.build-args) }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Build image
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: false
+          build-args: ${{ inputs.build-args }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.name }}:${{ steps.checkout.outputs.commit }}
