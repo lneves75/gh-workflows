@@ -3,8 +3,14 @@ name: CI
 on:
   workflow_call:
     inputs:
-      app-name:
+      name:
         required: true
+        type: string
+      ref:
+        required: false
+        type: string
+      build-args
+        required: false
         type: string
     secrets: {}
 
@@ -14,17 +20,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get image tag
-        id: image
-        run: |
-          if [ "${{ github.event_name }}" != 'push' ]; then
-            echo "tag=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
-          fi
-
       - name: Checkout
+        id: checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ input.ref }}
 
       - name: Docker login
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
@@ -35,4 +35,4 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.app-name }}:${{ steps.image.outputs.tag }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.app-name }}:${{ steps.checkout.outputs.commit }}
