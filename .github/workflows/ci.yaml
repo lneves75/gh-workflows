@@ -9,16 +9,20 @@ on:
       ref:
         required: false
         type: string
-      build-args
+      build-args:
         required: false
         type: string
-    secrets: {}
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+        type: string
+      DOCKERHUB_TOKEN:
+        required: true
+        type: string
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         id: checkout
