@@ -35,6 +35,8 @@ jobs:
         run: |
           echo ${{ inputs.build-args }}
           echo ${{ toJSON(inputs.build-args) }}
+          echo ${{ fromJSON(inputs.build-args) }} | jq .
+          echo ${{ toJSON(fromJSON(inputs.build-args)) }}
 
       - name: Build image
         uses: docker/build-push-action@v6
