@@ -15,10 +15,8 @@ on:
     secrets:
       DOCKERHUB_USERNAME:
         required: true
-        type: string
       DOCKERHUB_TOKEN:
         required: true
-        type: string
 
 jobs:
   build:
