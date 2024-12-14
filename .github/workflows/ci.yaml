@@ -41,7 +41,8 @@ jobs:
         with:
           context: .
           push: true
-          build-args: |
-            ${{ fromJSON(inputs.build-args) }}
+          build-args: |-
+            ${{ join(steps.set.outputs.args, '
+            ') }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.name }}:${{ steps.checkout.outputs.commit }}
