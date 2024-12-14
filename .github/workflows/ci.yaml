@@ -34,7 +34,7 @@ jobs:
       - name: set build-args
         id: set
         run: |
-          echo "args=$(echo ${{ inputs.build-args }} | jq '.[]')" >> $GITHUB_OUTPUT
+          echo "args=$(echo '${{ inputs.build-args }}' | jq -r '.[]')" >> $GITHUB_OUTPUT
 
       - name: Build image
         uses: docker/build-push-action@v6
