@@ -50,7 +50,7 @@ jobs:
       - name: Retag image
         env:
           tag: ${{ matrix.environment }}-${{ inputs.version }}
-        run:
+        run: |
           docker pull ${{ steps.image-repo.outputs.url }}:${{ steps.checkout.outputs.commit }}
           docker tag ${{ steps.image-repo.outputs.url }}:${{ steps.checkout.outputs.commit }} ${{ steps.image-repo.outputs.url }}:${{ env.tag }}
           docker image push --all-tags ${{ steps.image-repo.outputs.url }}
