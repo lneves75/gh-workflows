@@ -19,6 +19,8 @@ on:
         required: true
         type: string
     secrets:
+      token:
+        required: true
       DOCKERHUB_USERNAME:
         required: true
       DOCKERHUB_TOKEN:
@@ -55,11 +57,10 @@ jobs:
           docker tag ${{ steps.image-repo.outputs.url }}:${{ steps.checkout.outputs.commit }} ${{ steps.image-repo.outputs.url }}:${{ env.tag }}
           docker image push --all-tags ${{ steps.image-repo.outputs.url }}
 
-      - name: Create and push Git tag
-        env:
-          tag: ${{ matrix.environment }}-${{ inputs.version }}
-        run: |
-          git config user.name "lneves75"
-          git config user.email "luis.neves75@gmail.com"
-          git tag -a "${{ env.tag }}" -m "Deployment to ${{ matrix.environment }}"
-          git push origin "${{ env.tag }}"
+      # here we should configure which tags are automatically created when we push to the default branch
+      - name: Create tag
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.token }}
+          tag_prefix: ${{ matrix.environment }}-
+          custom_tag: ${{ inputs.version }}
