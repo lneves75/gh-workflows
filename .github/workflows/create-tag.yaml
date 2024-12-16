@@ -27,8 +27,6 @@ on:
 jobs:
   create-tag:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     strategy:
       matrix:
@@ -47,7 +45,7 @@ jobs:
       - name: Get service repo
         id: image-repo
         working-directory: helm
-        run: echo "url=$(yq '.image.repository' ${{ inputs.service }}.yaml)" >> $GITHUB_OUTPUT
+        run: echo "url=$(yq '.image.repository' values.yaml)" >> $GITHUB_OUTPUT
 
       - name: Retag image
         env:
