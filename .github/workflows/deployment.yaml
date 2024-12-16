@@ -62,7 +62,6 @@ jobs:
           token: ${{ secrets.token }}
 
       - name: Upsert file in target environment
-        if: github.event_name == 'push'
         env:
           source: service/helm/values-${{ steps.environment.outputs.name }}.yaml
           target: argocd-apps/apps/business/${{ steps.environment.outputs.name }}/${{ inputs.service }}.yaml
@@ -79,7 +78,6 @@ jobs:
           ${{ env.source }} > ${{ env.target }}
 
       - name: Commit changes to git
-        if: github.event_name == 'push'
         working-directory: argocd-apps/apps/business/${{ steps.environment.outputs.name }}
         run: |
           if [ $(git status --short | wc -l) -gt 0 ]; then
@@ -93,13 +91,13 @@ jobs:
           fi
   
       - name: Rebase and push new commits.
-        if: github.event_name == 'push'
         uses: nick-fields/retry@v3
         with:
           retry_on: error
           max_attempts: 3
           timeout_seconds: 15
           command: |
+            cd argocd-apps
             git remote add origin https://github.com/lneves75/argocd-apps.git
             git pull --rebase origin master && \
             git push
