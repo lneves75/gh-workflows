@@ -78,14 +78,12 @@ jobs:
           yq '.argocd | . += ({"tag": "${{ inputs.tag }}"},{"values": "https://raw.githubusercontent.com/${{ github.action_repository }}/refs/tags/${{ inputs.tag}}/helm"})' \
           ${{ env.source }} > ${{ env.target }}
 
-          git diff ${{ env.target }}
-
       - name: Commit changes to git
         if: github.event_name == 'push'
         working-directory: argocd-apps/apps/business/${{ steps.environment.outputs.name }}
         run: |
           if [ $(git status --short | wc -l) -gt 0 ]; then
-            commit_message="${{ inputs.service }}[${{ github.sha }}] deployed to ${{ steps.environment.outputs.name }}"
+            commit_message="${{ inputs.service }}[${{ inputs.tag }}] deployed to ${{ steps.environment.outputs.name }}"
             git config user.name lneves75
             git config user.email luis.neves@on.com
             git add ${{ inputs.service }}.yaml
