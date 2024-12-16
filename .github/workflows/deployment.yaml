@@ -1,0 +1,107 @@
+name: Deployment
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        description: "Name of the service which image we're deploying"
+        required: true
+        type: string
+      tag:
+        description: "Tag to be deployed"
+        required: true
+        type: string
+    secrets:
+      token:
+        required: true
+
+jobs:
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          path: service
+          ref: ${{ inputs.tag }}
+
+      - name: Get target environment
+        id: environment
+        run: |
+          echo "name=$(echo ${{ inputs.tag }} | awk -F'-' '{print $1}')" >> $GITHUB_OUTPUT
+    
+      - name: Check Argo values for environment
+        working-directory: service/helm
+        env:
+          values: values-${{ steps.environment.outputs.name }}.yaml
+        run: |
+          if [ $(yq '. | has("argocd")' ${values}) != 'true' ]; then
+            exit 1
+          fi
+          if [ $(yq '.argocd | has("name")' ${values}) != 'true' ]; then
+            exit 1
+          fi
+          if [ $(yq '.argocd | has("project")' ${values}) != 'true' ]; then
+            exit 1
+          fi
+          if [ $(yq '.argocd | has("cluster")' ${values}) != 'true' ]; then
+            exit 1
+          fi
+          if [ $(yq '.argocd | has("namespace")' ${values}) != 'true' ]; then
+            exit 1
+          fi
+
+      - name: Checkout Argo Apps
+        uses: actions/checkout@v4
+        with:
+          path: argocd-apps
+          repository: lneves75/argocd-apps
+          token: ${{ secrets.token }}
+
+      - name: Upsert file in target environment
+        if: github.event_name == 'push'
+        env:
+          source: service/helm/values-${{ steps.environment.outputs.name }}.yaml
+          target: argocd-apps/apps/business/${{ steps.environment.outputs.name }}/${{ inputs.service }}.yaml
+        run: |
+          if [ -f ${{ env.target }} ]; then
+            echo "Current tag: $(yq eval '.tag' ${{ env.target }})"
+            echo "New tag: ${{ inputs.tag }}"
+          else
+            echo "File doesn't exist for this environment. Creating one"
+          fi
+
+          echo "---" > ${{ env.target }}
+          yq '.argocd | . += ({"tag": "${{ inputs.tag }}"},{"values": "https://raw.githubusercontent.com/${{ github.action_repository }}/refs/tags/${{ inputs.tag}}/helm"})' \
+          ${{ env.source }} > ${{ env.target }}
+
+          git diff ${{ env.target }}
+
+      - name: Commit changes to git
+        if: github.event_name == 'push'
+        working-directory: argocd-apps/apps/business/${{ steps.environment.outputs.name }}
+        run: |
+          if [ $(git status --short | wc -l) -gt 0 ]; then
+            commit_message="${{ inputs.service }}[${{ github.sha }}] deployed to ${{ steps.environment.outputs.name }}"
+            git config user.name lneves75
+            git config user.email luis.neves@on.com
+            git add ${{ inputs.service }}.yaml
+            git commit -m "${commit_message}" -m"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          else
+            echo "No changes to commit" >> $GITHUB_STEP_SUMMARY
+          fi
+  
+      - name: Rebase and push new commits.
+        if: github.event_name == 'push'
+        uses: nick-fields/retry@v3
+        with:
+          retry_on: error
+          max_attempts: 3
+          timeout_seconds: 15
+          command: |
+            git remote add origin https://github.com/lneves75/argocd-apps.git
+            git pull --rebase origin master && \
+            git push
