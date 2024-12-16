@@ -1,4 +1,4 @@
-name: CI
+name: Build Image
 
 on:
   workflow_call:
@@ -9,10 +9,6 @@ on:
       ref:
         required: false
         type: string
-      build-args:
-        required: false
-        type: string
-        default: '[COMMIT_HASH=abc,VERSION=1.27.0]'
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -20,7 +16,7 @@ on:
         required: true
 
 jobs:
-  build:
+  build-image:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,18 +28,10 @@ jobs:
       - name: Docker login
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-        #      - name: set build-args
-        #        id: set
-        #        run: |
-        #          echo "args=$(echo '${{ inputs.build-args }}' | jq -r '.[]')" >> $GITHUB_OUTPUT
-
       - name: Build image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          build-args: |-
-            ${{ join(steps.set.outputs.args, '
-            ') }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.name }}:${{ steps.checkout.outputs.commit }}
