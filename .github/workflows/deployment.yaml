@@ -74,7 +74,7 @@ jobs:
           fi
 
           echo "---" > ${{ env.target }}
-          yq '.argocd | . += ({"tag": "${{ inputs.tag }}"},{"values": "https://raw.githubusercontent.com/${{ github.action_repository }}/refs/tags/${{ inputs.tag}}/helm"})' \
+          yq '.argocd | . += {"tag": "${{ inputs.tag }}"},{"values": "https://raw.githubusercontent.com/${{ github.repository }}/refs/tags/${{ inputs.tag}}/helm"}' \
           ${{ env.source }} > ${{ env.target }}
 
       - name: Commit changes to git
