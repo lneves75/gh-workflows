@@ -12,7 +12,7 @@ on:
       build-args:
         required: false
         type: string
-        default: '[COMMIT_HASH=abc,VERSION=1.27.0]'
+        default: 'COMMIT_HASH=abc,VERSION=1.27.0'
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -23,27 +23,47 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: get input
+        run: echo ${{ inputs.build-args }}
+
+      - name: split input
+        id: split
+        run: |
+          echo 'out<<EOF' >> $GITHUB_OUTPUT
+          for arg in $(echo ${{ inputs.build-args }} | tr , ' '); do
+            echo ${arg} >> $GITHUB_OUTPUT
+          done
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: show output
+        run: echo ${{ steps.split.outputs.out }}
+
+      - name: toJSON
+        id: tojson
+        run: echo "out=${{ toJSON(inputs.build-args) }}" >> $GITHUB_OUTPUT
+
+      - name: show json output
+        run: echo ${{ fromJSON(steps.tojson.outputs.out) }}
+
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Docker login
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      # - name: Docker login
+      #   run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-        #      - name: set build-args
-        #        id: set
-        #        run: |
-        #          echo "args=$(echo '${{ inputs.build-args }}' | jq -r '.[]')" >> $GITHUB_OUTPUT
+      # - name: set build-args
+      #   id: set
+      #   run: |
+      #     echo "args=$(echo '${{ inputs.build-args }}' | jq -r '.[]')" >> $GITHUB_OUTPUT
 
       - name: Build image
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
-          build-args: |-
-            ${{ join(steps.set.outputs.args, '
-            ') }}
+          push: false
+          build-args: ${{ inputs.build-args }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.name }}:${{ steps.checkout.outputs.commit }}
