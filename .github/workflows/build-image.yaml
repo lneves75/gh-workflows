@@ -17,7 +17,7 @@ on:
         description: "build args for image build"
         required: false
         type: string
-        default: 'COMMIT_HASH=abc VERSION=1.27.0'
+        default: '["COMMIT_HASH=abc", "VERSION=1.27.0"]'
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -42,12 +42,13 @@ jobs:
         run: |
           echo "out=${{ toJSON(inputs.build-args) }}" >> $GITHUB_OUTPUT
           echo "${{ toJSON(inputs.build-args) }}" >> $GITHUB_STEP_SUMMARY
+          echo "${{ fromJSON(inputs.build-args) }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Build image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: false
-          build-args: ${{ inputs.build-args }}
+          build-args: ${{ fromJson(inputs.build-args) }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.name }}:${{ steps.checkout.outputs.commit }}
