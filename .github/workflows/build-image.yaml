@@ -1,21 +1,23 @@
 name: Build Image
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       name:
-        required: true
-        type: string
         description: "service name"
-      ref:
         required: false
         type: string
+        default: ${{ github.repository }}
+      ref:
         description: "git ref to checkout"
+        required: false
+        type: string
+        default: ${{ github.sha }}
       build-args:
+        description: "build args for image build"
         required: false
         type: string
         default: 'COMMIT_HASH=abc,VERSION=1.27.0'
-        description: "build args for image build"
     secrets:
       DOCKERHUB_USERNAME:
         required: true
