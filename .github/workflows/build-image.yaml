@@ -17,7 +17,7 @@ on:
         description: "build args for image build"
         required: false
         type: string
-        default: '{args:[COMMIT_HASH=abc,VERSION=1.27.0]}'
+        default: '{"args":["COMMIT_HASH=abc","VERSION=1.27.0"]}'
     secrets:
       DOCKERHUB_USERNAME:
         required: true
