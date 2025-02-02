@@ -17,7 +17,7 @@ on:
         description: "build args for image build"
         required: false
         type: string
-        default: '{"args":["COMMIT_HASH=abc","VERSION=1.27.0"]}'
+        default: '{\"args\":[\"COMMIT_HASH=abc\",\"VERSION=1.27.0\"]}'
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -28,11 +28,17 @@ jobs:
   build-image:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref }}
+      - name: output result from script
+        env:
+          BARGS: ${{ fromJSON(inputs.build-args) }}
+        run: |
+          echo ${BARGS}
+  
+      # - name: Checkout
+      #   id: checkout
+      #   uses: actions/checkout@v4
+      #   with:
+      #     ref: ${{ inputs.ref }}
 
       # - name: Docker login
       #   run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
@@ -48,12 +54,6 @@ jobs:
       #       const wordsArray = text.split(","); // Splitting by comma
       #       const multiLineString = wordsArray.join("\n"); // Joining with newlines
       #       console.log(multiLineString)
-
-      - name: output result from script
-        env:
-          BARGS: ${{ fromJSON(inputs.build-args) }}
-        run: |
-          echo ${BARGS}
 
       # - name: Build image
       #   uses: docker/build-push-action@v6
