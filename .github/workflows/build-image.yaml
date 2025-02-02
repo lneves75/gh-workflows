@@ -51,10 +51,12 @@ jobs:
 
       - name: output result from script
         env:
+          buildargs: ${{ fromJson(inputs.build-args) }}
           array: |-
-            ${{ join(fromJSON(inputs.build-args).args, '
+            ${{ join(fromJSON(inputs.build-args), '
             ') }}
         run: |
+          echo ${buildargs}
           echo ${array}
 
       # - name: Build image
