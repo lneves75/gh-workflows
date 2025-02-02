@@ -17,7 +17,7 @@ on:
         description: "build args for image build"
         required: false
         type: string
-        default: 'COMMIT_HASH=abc,VERSION=1.27.0'
+        default: '{args: [COMMIT_HASH=abc,VERSION=1.27.0]}'
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -37,25 +37,32 @@ jobs:
       # - name: Docker login
       #   run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-      - uses: actions/github-script@v7
-        id: script
+      # - uses: actions/github-script@v7
+      #   id: script
+      #   env:
+      #     buildargs: ${{ inputs.build-args }}
+      #   with:
+      #     result-encoding: 'string'
+      #     script: |
+      #       const text = process.env.buildargs;
+      #       const wordsArray = text.split(","); // Splitting by comma
+      #       const multiLineString = wordsArray.join("\n"); // Joining with newlines
+      #       console.log(multiLineString)
+
+      - name: output result from script
         env:
-          buildargs: ${{ inputs.build-args }}
-        with:
-          script: |
-            const text = process.env.buildargs;
-            const wordsArray = text.split(","); // Splitting by comma
-            const multiLineString = wordsArray.join("\n"); // Joining with newlines
-            console.log(multiLineString)
+          array: |-
+            ${{ join(fromJSON(inputs.build-args).args, '
+            ') }}
+        run: |
+          echo ${array}
 
-      - name: output value
-        run: echo "multiLineString=${{ steps.script.outputs.result }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: Build image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: false
-          build-args: ${{ steps.script.outputs.result }}
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.name }}:${{ steps.checkout.outputs.commit }}
+      # - name: Build image
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: .
+      #     push: false
+      #     build-args: |
+      #       ${{ steps.script.outputs.result }}
+      #     tags: |
+      #       ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.name }}:${{ steps.checkout.outputs.commit }}
