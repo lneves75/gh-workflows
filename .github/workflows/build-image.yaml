@@ -17,7 +17,7 @@ on:
         description: "build args for image build"
         required: false
         type: string
-        default: '{args: [COMMIT_HASH=abc,VERSION=1.27.0]}'
+        default: '{args:[COMMIT_HASH=abc,VERSION=1.27.0]}'
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -51,13 +51,9 @@ jobs:
 
       - name: output result from script
         env:
-          buildargs: ${{ fromJson(inputs.build-args) }}
-          array: |-
-            ${{ join(fromJSON(inputs.build-args), '
-            ') }}
+          BARGS: ${{ fromJSON(inputs.build-args) }}
         run: |
-          echo ${buildargs}
-          echo ${array}
+          echo ${BARGS}
 
       # - name: Build image
       #   uses: docker/build-push-action@v6
